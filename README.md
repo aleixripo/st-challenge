@@ -1,4 +1,4 @@
-# Backoffice de Gestión - Prueba Técnica Studiogenesis
+# Backoffice de Gestión de Categorias, Productos y Tarifas
 
 Este proyecto es una solución completa para la gestión de productos, categorías y tarifas, desarrollada con **Nuxt 4**, **Bootstrap 5** y **Supabase**.
 
