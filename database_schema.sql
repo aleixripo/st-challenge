@@ -106,3 +106,18 @@ WITH
 CREATE POLICY "Total access for authenticated users" ON "public"."orders" FOR ALL TO public USING (auth.role () = CAST('authenticated' AS text))
 WITH
     CHECK (auth.role () = CAST('authenticated' AS text));
+
+INSERT INTO
+    public.categories (code, name)
+VALUES
+    ('CAT001', 'Electrónica'),
+    ('CAT002', 'Hogar');
+
+INSERT INTO
+    public.products (code, name, description)
+VALUES
+    (
+        'PROD001',
+        'Smartphone X',
+        'Descripción del teléfono...'
+    );
