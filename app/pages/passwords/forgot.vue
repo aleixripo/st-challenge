@@ -22,11 +22,10 @@ const handleReset = async () => {
     errorMsg.value = ''
     successMsg.value = ''
 
-    const host = window.location.origin
+    const currentUrl = window.location.origin;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
-        // redirectTo: `${host}/passwords/update`,
-        redirectTo: `https://st-challenge-sepia.vercel.app/passwords/update`,
+        redirectTo: `${currentUrl}/passwords/update`,
     })
 
     if (error) {
