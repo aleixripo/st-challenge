@@ -34,14 +34,15 @@ const handleAuth = async () => {
     errorMsg.value = ''
     successMsg.value = ''
 
+    const redirectTo = window.location.origin + '/confirm'
+
     if (isRegistering.value) {
         const { error } = await supabase.auth.signUp({
             email: email.value,
             password: password.value,
-            options: { emailRedirectTo: 'http://localhost:3000/confirm' }
+            options: { emailRedirectTo: redirectTo }
         })
         if (error) errorMsg.value = error.message
-        // else successMsg.value = 'Revisa tu correo para confirmar la cuenta.'
         else navigateTo('/')
     } else {
         const { error } = await supabase.auth.signInWithPassword({

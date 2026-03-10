@@ -22,8 +22,10 @@ const handleReset = async () => {
     errorMsg.value = ''
     successMsg.value = ''
 
+    const host = window.location.origin
+
     const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
-        redirectTo: 'http://localhost:3000/passwords/update',
+        redirectTo: `${host}/passwords/update`,
     })
 
     if (error) {
