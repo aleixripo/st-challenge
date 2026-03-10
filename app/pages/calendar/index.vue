@@ -1,14 +1,21 @@
 <script setup>
+
+// Importar librerías y variables globales
 import Swal from 'sweetalert2'
 
+// Obtener la instancia de Supabase para realizar consultas a la base de datos.
 const supabase = useSupabaseClient()
+
+// Variables para almacenar los productos, pedidos, estado de carga y envío del formulario
 const products = ref([])
 const orders = ref([])
 const loading = ref(true)
 const isSubmitting = ref(false)
 
+// Fecha actual en formato local 'sv-SE' (dd/mm/yyyy).
 const todayLocal = new Date().toLocaleDateString('sv-SE')
 
+// Formulario para crear un nuevo pedido.
 const form = ref({
     product_id: '',
     order_date: todayLocal,
@@ -16,6 +23,13 @@ const form = ref({
     total_cost: 0
 })
 
+/*
+ * Obtener datos de Supabase, incluidos pedidos y productos con tarifas.
+ *
+ * Establece `loading` en `true` mientras se obtienen los datos.
+ * Establece `pedidos` y `productos` en los datos obtenidos.
+ * Establece `loading` en `false` cuando se han obtenido los datos.
+ */
 const fetchData = async () => {
     loading.value = true
     const { data: ord } = await supabase
@@ -29,6 +43,13 @@ const fetchData = async () => {
     loading.value = false
 }
 
+
+/**
+ * Calcula el costo total del pedido en base a la fecha del pedido,
+ * la cantidad de unidades y la tarifa correspondiente al producto.
+ * Si no se encuentra una tarifa para la fecha del pedido o no se ha
+ * seleccionado un producto, se establece el costo total en 0.
+ */
 const calculatePrice = () => {
     const selectedProd = products.value.find(p => p.id === form.value.product_id)
     if (!selectedProd || !form.value.order_date) {
@@ -44,6 +65,13 @@ const calculatePrice = () => {
     form.value.total_cost = rate ? (rate.price * form.value.units) : 0
 }
 
+/**
+ * Guarda un nuevo pedido en la base de datos.
+ * Si el costo total del pedido es menor o igual a cero, se muestra un mensaje de error.
+ * Si no hay error al guardar el pedido, se muestra un mensaje de éxito y se 
+ * reinician los valores del formulario.
+ * @returns {Promise<void>}
+ */
 const saveOrder = async () => {
     if (form.value.total_cost <= 0) {
         return Swal.fire('Error', 'No hay tarifa para esta fecha', 'error')
@@ -58,7 +86,15 @@ const saveOrder = async () => {
     isSubmitting.value = false
 }
 
-
+/**
+ * Cancela un pedido en la base de datos.
+ * Si el usuario confirma la eliminación, se borra el pedido en la base de datos.
+ * Si no hay error al eliminar el pedido, se muestra un mensaje de éxito y se
+ * recarga la tabla de pedidos.
+ * Si hay error al eliminar el pedido, se muestra un mensaje de error.
+ * @param {number} id - Identificador del pedido a cancelar.
+ * @returns {Promise<void>}
+ */
 const deleteOrder = async (id) => {
     const result = await Swal.fire({
         title: '¿Cancelar pedido?',

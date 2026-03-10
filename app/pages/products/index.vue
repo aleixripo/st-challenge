@@ -1,15 +1,20 @@
 <script setup>
+
+// Importar librerías y variables globales
 import Swal from 'sweetalert2'
 import * as XLSX from 'xlsx'
 
+// Obtener la instancia de Supabase para realizar consultas a la base de datos.
 const supabase = useSupabaseClient()
+
+// Variables para almacenar los productos, categorías, estado de carga y envío del formulario
 const products = ref([])
 const categories = ref([])
 const loading = ref(true)
 const isSubmitting = ref(false)
 const isEditing = ref(false)
 
-// Estado del formulario según campos mínimos 
+// Formulario para crear o editar un producto.
 const form = ref({
     id: null,
     code: '',
@@ -19,15 +24,20 @@ const form = ref({
     category_ids: []
 })
 
+// Instancia de la ventana modal de Bootstrap para mostrar el formulario de creación o edición de productos.
 let modalInstance = null
 
+/**
+ * Carga los datos de productos y categorías desde Supabase y los almacena en las variables `products` y `categories`.
+ * Muestra un mensaje de error con `Swal` si ocurre un error.
+ * Establece `loading` en `true` mientras se cargan los datos y en `false` cuando se han cargado.
+ */
 const fetchData = async () => {
     loading.value = true
-    // Cargar categorías para el select múltiple 
+
     const { data: catData } = await supabase.from('categories').select('id, name')
     categories.value = catData || []
 
-    // Cargar productos con sus categorías asociadas
     const { data: prodData, error } = await supabase
         .from('products')
         .select(`
@@ -42,6 +52,12 @@ const fetchData = async () => {
     loading.value = false
 }
 
+/**
+ * Abre la ventana modal para crear o editar un producto.
+ * Si se proporciona un objeto `prod`, se cargan los datos del producto en el formulario.
+ * De lo contrario, se limpian los campos del formulario.
+ * Se muestra la ventana modal al finalizar la función.
+ */
 const openModal = (prod = null) => {
     if (prod) {
         isEditing.value = true
@@ -60,6 +76,14 @@ const openModal = (prod = null) => {
     modalInstance.show()
 }
 
+/**
+ * Envía una solicitud para crear o actualizar un producto.
+ * Si se produce un error, se muestra un mensaje de error con `Swal`.
+ * Si se completa con éxito, se actualiza la relación de categorías del producto y se
+ * muestra un mensaje de confirmación con `Swal` y se oculta la ventana modal.
+ * Se establece `isSubmitting` en `true` mientras se envía la solicitud y en
+ * `false` cuando se completa.
+ */
 const handleSave = async () => {
     isSubmitting.value = true
     const productPayload = {
@@ -92,6 +116,11 @@ const handleSave = async () => {
     isSubmitting.value = false
 }
 
+/**
+ * Exporta los productos a un archivo Excel en formato XLSX.
+ * Se utiliza la fecha actual en formato local 'sv-SE' (dd/mm/yyyy) para nombrar el archivo.
+ * El archivo se guarda en la carpeta actual y se muestra un mensaje de confirmación con `console.log`.
+ */
 const exportXLS = () => {
     const today = new Date().toLocaleDateString('sv-SE');
 
@@ -114,6 +143,13 @@ const exportXLS = () => {
     XLSX.writeFile(wb, `Productos_${today}.xlsx`)
 }
 
+/**
+ * Elimina un producto con su respectiva relación de categorías.
+ * Se muestra un mensaje de confirmación con `Swal` antes de eliminar.
+ * Si se produce un error, no se hará nada.
+ * Si se completa con éxito, se recarga la tabla de productos con `fetchData`.
+ * @param {number} id - Identificador del producto a eliminar.
+ */
 const deleteProduct = async (id) => {
     const result = await Swal.fire({
         title: '¿Eliminar producto?',
@@ -127,6 +163,10 @@ const deleteProduct = async (id) => {
     }
 }
 
+/**
+ * Se ejecuta cuando se monta el componente.
+ * Se encarga de inicializar la instancia de la modal de Bootstrap y de cargar los datos de las categorías.
+ */
 onMounted(async () => {
     await fetchData()
     const { Modal } = await import('bootstrap')

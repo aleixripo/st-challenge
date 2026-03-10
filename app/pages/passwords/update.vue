@@ -1,3 +1,38 @@
+<script setup>
+
+// Importar la instancia de Supabase para realizar consultas a la base de datos
+const supabase = useSupabaseClient()
+
+// Variables para almacenar la nueva contraseña, estado de carga y mensajes de error
+const password = ref('')
+const loading = ref(false)
+const errorMsg = ref('')
+
+/**
+ * Actualiza la contraseña del usuario actual.
+ * 
+ * Establece `loading` en `true` mientras se actualiza la contraseña.
+ * Establece `errorMsg` en el mensaje de error si ocurre un error.
+ * Establece `loading` en `false` cuando se completa la actualización.
+ * Redirige a la ruta principal si se completa con éxito.
+ */
+const handleUpdate = async () => {
+    loading.value = true
+    errorMsg.value = ''
+
+    const { error } = await supabase.auth.updateUser({
+        password: password.value
+    })
+
+    if (error) {
+        errorMsg.value = "Error al actualizar: " + error.message
+        loading.value = false
+    } else {
+        await navigateTo('/')
+    }
+}
+</script>
+
 <template>
     <div class="container vh-100 d-flex align-items-center justify-content-center">
         <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
@@ -20,26 +55,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-const supabase = useSupabaseClient()
-const password = ref('')
-const loading = ref(false)
-const errorMsg = ref('')
-
-const handleUpdate = async () => {
-    loading.value = true
-    errorMsg.value = ''
-
-    const { error } = await supabase.auth.updateUser({
-        password: password.value
-    })
-
-    if (error) {
-        errorMsg.value = "Error al actualizar: " + error.message
-        loading.value = false
-    } else {
-        await navigateTo('/')
-    }
-}
-</script>

@@ -1,24 +1,35 @@
 <script setup>
+
+// Importar librerías y variables globales
 import Swal from 'sweetalert2'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
-const route = useRoute()
+// Obtener la instancia de Supabase para realizar consultas a la base de datos.
 const supabase = useSupabaseClient()
+
+// Variables para almacenar los datos del producto, tarifas y estado de carga 
+const route = useRoute()
 const product = ref(null)
 const rates = ref([])
 const loading = ref(true)
 
-// Estado para el formulario de nueva tarifa
+// Formulario para crear una nueva tarifa
 const newTariff = ref({
     price: 0,
     start_date: '',
     end_date: ''
 })
 
+/**
+ * Obtiene el producto y sus categorías, y también sus tarifas.
+ * Establece `loading` en `true` mientras se obtienen los datos.
+ * Establece `product` y `rates` en los datos obtenidos.
+ * Establece `loading` en `false` cuando se han obtenido los datos.
+ * @return {Promise<void>} Una promesa que se resuelve cuando se han obtenido los datos.
+ */
 const fetchProductData = async () => {
     loading.value = true
-    // Obtener producto y sus categorías
     const { data: prod } = await supabase
         .from('products')
         .select('*, product_categories(categories(name))')
@@ -27,7 +38,6 @@ const fetchProductData = async () => {
 
     product.value = prod
 
-    // Obtener sus tarifas 
     const { data: tf } = await supabase
         .from('rates')
         .select('*')
@@ -38,6 +48,15 @@ const fetchProductData = async () => {
     loading.value = false
 }
 
+/**
+ * Añade una nueva tarifa para el producto actual.
+ * Envía una solicitud a Supabase para insertar la tarifa en la tabla de tarifas.
+ * Si se produce un error, se muestra un mensaje de error con `Swal`.
+ * Si se completa con éxito, se muestra un mensaje de confirmación con `Swal`, se
+ * resetea el formulario de la tarifa y se vuelve a obtener los datos del producto.
+ * @return {Promise<void>} Una promesa que se resuelve cuando se ha completado
+ * el proceso de agregar la tarifa.
+ */
 const addTariff = async () => {
     const { error } = await supabase.from('rates').insert([{
         product_id: route.params.id,
@@ -53,12 +72,26 @@ const addTariff = async () => {
     }
 }
 
+/**
+ * Elimina una tarifa del producto actual.
+ * Envía una solicitud a Supabase para eliminar la tarifa de la tabla de tarifas.
+ * Luego se vuelve a obtener los datos del producto con `fetchProductData`.
+ * @param {number} id - Identificador de la tarifa a eliminar.
+ * @return {Promise<void>} Una promesa que se resuelve cuando se ha completado
+ * el proceso de eliminar la tarifa.
+ */
 const deleteTariff = async (id) => {
     await supabase.from('rates').delete().eq('id', id)
     fetchProductData()
 }
 
-// Requisito: Descargar PDF con información del producto
+
+/**
+ * Descarga un PDF con la ficha del producto actual.
+ * La ficha contiene el nombre del producto, código, descripción y categorías.
+ * También incluye una tabla con las tarifas del producto.
+ * @return {void}
+ */
 const downloadPDF = () => {
     const doc = new jsPDF()
 
@@ -88,6 +121,7 @@ const downloadPDF = () => {
     doc.save(`Ficha_${product.value.code}.pdf`)
 }
 
+// Obtener los datos del producto al montar el componente
 onMounted(() => {
     fetchProductData()
 })

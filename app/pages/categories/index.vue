@@ -1,13 +1,18 @@
 <script setup>
+
+// Importar librerías y variables globales
 import Swal from 'sweetalert2'
 
+// Obtener la instancia de Supabase para realizar consultas a la base de datos.
 const supabase = useSupabaseClient()
+
+// Variables para almacenar las categorías, estado de carga y edición y envío del formulario
 const categories = ref([])
 const loading = ref(true)
 const isSubmitting = ref(false)
-const isEditing = ref(false) // Controla si el modal es para crear o editar
+const isEditing = ref(false)
 
-// Estado del formulario
+// Formulario para crear o editar categorías
 const form = ref({
     id: null,
     code: '',
@@ -16,8 +21,16 @@ const form = ref({
     parent_id: null
 })
 
+// Instancia de la ventana modal para mostrar el formulario
 let modalInstance = null
 
+/**
+ * Obtener categorías con sus respectivas categorías padre.
+ * Establece `loading` en `true` mientras se obtienen los datos.
+ * Establece `categories` en los datos obtenidos.
+ * Establece `loading` en `false` cuando se han obtenido los datos.
+ * Muestra un mensaje de error con `Swal` si ocurre un error.
+ */
 const fetchCategories = async () => {
     loading.value = true
     const { data, error } = await supabase
@@ -30,26 +43,41 @@ const fetchCategories = async () => {
     loading.value = false
 }
 
-// Abre el modal para CREAR
-const openCreateModal = () => {
-    isEditing.value = false
-    form.value = { id: null, code: '', name: '', description: '', parent_id: null }
-    modalInstance.show()
-}
-
-// Abre el modal para EDITAR cargando los datos
-const openEditModal = (cat) => {
-    isEditing.value = true
-    form.value = {
-        id: cat.id,
-        code: cat.code,
-        name: cat.name,
-        description: cat.description,
-        parent_id: cat.parent_id
+/**
+ * Abre la ventana modal para crear o editar una categoría.
+ * Si `cat` es proporcionado, se establecerá en modo de edición y se
+ * completará el formulario con los datos de la categoría.
+ * De lo contrario, se establecerá en modo de creación y se
+ * limpiará el formulario.
+ * Se muestra la ventana modal al finalizar.
+ * @param {Object} [cat] - La categoría a editar, o null para crear una nueva.
+ */
+const openModal = (cat = null) => {
+    if (cat) {
+        isEditing.value = true
+        form.value = {
+            id: cat.id,
+            code: cat.code,
+            name: cat.name,
+            description: cat.description,
+            parent_id: cat.parent_id
+        }
+        modalInstance.show()
+    } else {
+        isEditing.value = false
+        form.value = { id: null, code: '', name: '', description: '', parent_id: null }
+        modalInstance.show()
     }
-    modalInstance.show()
 }
 
+/**
+ * Envía una solicitud para crear o actualizar una categoría.
+ * Si se produce un error, se muestra un mensaje de error con `Swal`.
+ * Si se completa con éxito, se muestra un mensaje de confirmación con `Swal` y se
+ * oculta la ventana modal.
+ * Se establece `isSubmitting` en `true` mientras se envía la solicitud y en
+ * `false` cuando se completa.
+ */
 const handleSubmit = async () => {
     isSubmitting.value = true
 
@@ -84,6 +112,13 @@ const handleSubmit = async () => {
     isSubmitting.value = false
 }
 
+/**
+ * Elimina una categoría con su respectiva subcategoría.
+ * Se mostrara un mensaje de confirmación con `Swal` antes de eliminar.
+ * Si se produce un error, no se hará nada.
+ * Si se completa con éxito, se recarga la tabla de categorías con `fetchCategories`.
+ * @param {number} id - Identificador de la categoría a eliminar.
+ */
 const deleteCategory = async (id) => {
     const result = await Swal.fire({
         title: '¿Estás seguro?',
@@ -100,6 +135,10 @@ const deleteCategory = async (id) => {
     }
 }
 
+/**
+ * Se ejecuta cuando se monta el componente.
+ * Se encarga de inicializar la instancia de la modal de Bootstrap y de cargar los datos de las categorías.
+ */
 onMounted(async () => {
     await fetchCategories()
     const { Modal } = await import('bootstrap')
@@ -111,7 +150,7 @@ onMounted(async () => {
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-tags me-2"></i>Gestión de Categorías</h2>
-            <button @click="openCreateModal" class="btn btn-primary shadow-sm">
+            <button @click="openModal()" class="btn btn-primary shadow-sm">
                 <i class="bi bi-plus-lg me-1"></i> Nueva Categoría
             </button>
         </div>
@@ -143,7 +182,7 @@ onMounted(async () => {
                             </td>
                             <td class="text-end">
                                 <div class="btn-group">
-                                    <button @click="openEditModal(cat)" class="btn btn-sm btn-outline-primary">
+                                    <button @click="openModal(cat)" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <button @click="deleteCategory(cat.id)" class="btn btn-sm btn-outline-danger">

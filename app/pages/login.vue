@@ -1,3 +1,59 @@
+<script setup>
+
+// Obtener la instancia de Supabase para realizar consultas a la base de datos.
+const supabase = useSupabaseClient()
+
+// Variables para almacenar los datos de inicio de sesión y registro y mensajes de error y exito
+const email = ref('')
+const password = ref('')
+const isRegistering = ref(false)
+const errorMsg = ref('')
+const successMsg = ref('')
+
+// Función para alternar entre el modo de inicio de sesión y el de registro de usuarios
+function toggleMode() {
+    isRegistering.value = !isRegistering.value
+    email.value = ''
+    password.value = ''
+    errorMsg.value = ''
+    successMsg.value = ''
+}
+
+/**
+ * Maneja la autenticación de usuarios.
+ * 
+ * Si se está en modo de registro, se utiliza la función `signUp` de Supabase para crear una cuenta.
+ * Si se produce un error, se muestra el mensaje del error en `errorMsg`.
+ * Si se registra correctamente, se redirige a la ruta de confirmación de la cuenta.
+ * 
+ * Si se está en modo de inicio de sesión, se utiliza la función `signInWithPassword` de Supabase para iniciar sesión.
+ * Si se produce un error, se muestra el mensaje "Credenciales inválidas" en `errorMsg`.
+ * Si se inicia sesión correctamente, se redirige a la ruta principal.
+ **/
+const handleAuth = async () => {
+    errorMsg.value = ''
+    successMsg.value = ''
+
+    if (isRegistering.value) {
+        const { error } = await supabase.auth.signUp({
+            email: email.value,
+            password: password.value,
+            options: { emailRedirectTo: 'http://localhost:3000/confirm' }
+        })
+        if (error) errorMsg.value = error.message
+        // else successMsg.value = 'Revisa tu correo para confirmar la cuenta.'
+        else navigateTo('/')
+    } else {
+        const { error } = await supabase.auth.signInWithPassword({
+            email: email.value,
+            password: password.value,
+        })
+        if (error) errorMsg.value = 'Credenciales inválidas'
+        else navigateTo('/')
+    }
+}
+</script>
+
 <template>
     <div class="container vh-100 d-flex align-items-center justify-content-center">
         <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
@@ -28,44 +84,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-const supabase = useSupabaseClient()
-const email = ref('')
-const password = ref('')
-const isRegistering = ref(false)
-const errorMsg = ref('')
-const successMsg = ref('')
-
-// Función para limpiar campos al cambiar de modo
-function toggleMode() {
-    isRegistering.value = !isRegistering.value
-    email.value = ''
-    password.value = ''
-    errorMsg.value = ''
-    successMsg.value = ''
-}
-
-const handleAuth = async () => {
-    errorMsg.value = ''
-    successMsg.value = ''
-
-    if (isRegistering.value) {
-        const { error } = await supabase.auth.signUp({
-            email: email.value,
-            password: password.value,
-            options: { emailRedirectTo: 'http://localhost:3000/confirm' }
-        })
-        if (error) errorMsg.value = error.message
-        // else successMsg.value = 'Revisa tu correo para confirmar la cuenta.'
-        else navigateTo('/')
-    } else {
-        const { error } = await supabase.auth.signInWithPassword({
-            email: email.value,
-            password: password.value,
-        })
-        if (error) errorMsg.value = 'Credenciales inválidas'
-        else navigateTo('/')
-    }
-}
-</script>

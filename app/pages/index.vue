@@ -1,3 +1,21 @@
+<script setup>
+
+// Obtener la instancia del usuario y la instancia de Supabase para realizar consultas a la base de datos. 
+const user = useSupabaseUser()
+const supabase = useSupabaseClient()
+
+
+/**
+ * Cierra la sesión actual y redirige al usuario a la página de inicio de sesión.
+ * 
+ * @returns {Promise<void>} Promesa que se resuelve cuando se ha cerrado la sesión.
+ */
+const logout = async () => {
+    await supabase.auth.signOut()
+    navigateTo('/login')
+}
+</script>
+
 <template>
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center border-bottom pb-3">
@@ -46,13 +64,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-const user = useSupabaseUser()
-const supabase = useSupabaseClient()
-
-const logout = async () => {
-    await supabase.auth.signOut()
-    navigateTo('/login')
-}
-</script>
