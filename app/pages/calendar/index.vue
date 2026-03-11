@@ -125,8 +125,12 @@ watch(() => [form.value.product_id, form.value.order_date, form.value.units], ca
 
 <template>
     <div class="container mt-4">
-        <h2 class="mb-4"><i class="bi bi-calendar-event me-2"></i>Agenda de Pedidos</h2>
-
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-calendar-event me-2"></i>Agenda de Pedidos</h2>
+            <NuxtLink to="/" class="btn btn btn-outline-secondary btn-smtext-decoration-none">
+                <i class="bi bi-house-door me-1"></i> Volver al Dashboard
+            </NuxtLink>
+        </div>
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
@@ -140,7 +144,7 @@ watch(() => [form.value.product_id, form.value.order_date, form.value.units], ca
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Fecha de Pedido</label>
+                            <label class="form-label small fw-bold">Fecha</label>
                             <input v-model="form.order_date" type="date" class="form-control shadow-none">
                         </div>
                         <div class="mb-3">
@@ -205,12 +209,6 @@ watch(() => [form.value.product_id, form.value.order_date, form.value.units], ca
                         </table>
                     </div>
                 </div>
-            </div>
-
-            <div class="mt-3">
-                <NuxtLink to="/" class="btn btn-link btn-sm text-muted text-decoration-none">
-                    <i class="bi bi-house-door me-1"></i> Volver al Dashboard
-                </NuxtLink>
             </div>
         </div>
     </div>

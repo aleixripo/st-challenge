@@ -134,7 +134,7 @@ onMounted(() => {
                 <i class="bi bi-arrow-left"></i> Volver
             </NuxtLink>
             <button @click="downloadPDF" class="btn btn-danger">
-                <i class="bi bi-file-pdf me-1"></i> Descargar Ficha PDF
+                <i class="bi bi-file-pdf me-1"></i> Exportar
             </button>
         </div>
 

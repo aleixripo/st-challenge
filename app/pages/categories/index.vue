@@ -150,9 +150,14 @@ onMounted(async () => {
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-tags me-2"></i>Gestión de Categorías</h2>
-            <button @click="openModal()" class="btn btn-primary shadow-sm">
-                <i class="bi bi-plus-lg me-1"></i> Nueva Categoría
-            </button>
+            <div class="d-flex gap-2">
+                <NuxtLink to="/" class="btn btn btn-outline-secondary btn-smtext-decoration-none">
+                    <i class="bi bi-house-door me-1"></i> Volver al Dashboard
+                </NuxtLink>
+                <button @click="openModal()" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-plus-lg me-1"></i> Nueva Categoría
+                </button>
+            </div>
         </div>
 
         <div v-if="loading" class="text-center my-5">
@@ -199,12 +204,6 @@ onMounted(async () => {
                     </tbody>
                 </table>
             </div>
-        </div>
-
-        <div class="mt-3">
-            <NuxtLink to="/" class="btn btn-link btn-sm text-muted text-decoration-none">
-                <i class="bi bi-house-door me-1"></i> Volver al Dashboard
-            </NuxtLink>
         </div>
 
         <div class="modal fade" id="categoryModal" tabindex="-1">

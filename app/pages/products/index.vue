@@ -13,6 +13,7 @@ const categories = ref([])
 const loading = ref(true)
 const isSubmitting = ref(false)
 const isEditing = ref(false)
+const uploadingImg = ref(false)
 
 // Formulario para crear o editar un producto.
 const form = ref({
@@ -20,7 +21,7 @@ const form = ref({
     code: '',
     name: '',
     description: '',
-    photos: [],
+    photos: '',
     category_ids: []
 })
 
@@ -53,6 +54,43 @@ const fetchData = async () => {
 }
 
 /**
+ * Sube una imagen para el producto.
+ * @param {Event} event - Evento que contiene el archivo a subir.
+ * @returns {Promise<void>}
+ */
+
+const uploadImage = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    try {
+        uploadingImg.value = true
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${Date.now()}.${fileExt}`
+
+        const { error: uploadError } = await supabase.storage
+            .from('product-photos')
+            .upload(fileName, file)
+
+        if (uploadError) throw uploadError
+
+        const { data } = supabase.storage
+            .from('product-photos')
+            .getPublicUrl(fileName)
+
+        const current = form.value.photos ? form.value.photos.trim() : ''
+        form.value.photos = current ? `${current}, ${data.publicUrl}` : data.publicUrl
+
+        Swal.fire({ title: 'Imagen subida', icon: 'success', timer: 1000, showConfirmButton: false })
+    } catch (err) {
+        Swal.fire('Error', 'No se pudo subir la imagen: ' + err.message, 'error')
+    } finally {
+        uploadingImg.value = false
+        event.target.value = ''
+    }
+}
+
+/**
  * Abre la ventana modal para crear o editar un producto.
  * Si se proporciona un objeto `prod`, se cargan los datos del producto en el formulario.
  * De lo contrario, se limpian los campos del formulario.
@@ -66,7 +104,7 @@ const openModal = (prod = null) => {
             code: prod.code,
             name: prod.name,
             description: prod.description,
-            photos: prod.photos || [],
+            photos: prod.photos ? prod.photos.join(', ') : '',
             category_ids: prod.product_categories.map(pc => pc.category_id)
         }
     } else {
@@ -86,11 +124,14 @@ const openModal = (prod = null) => {
  */
 const handleSave = async () => {
     isSubmitting.value = true
+    const photosArray = form.value.photos
+        ? form.value.photos.split(',').map(s => s.trim()).filter(s => s !== '')
+        : []
     const productPayload = {
         code: form.value.code,
         name: form.value.name,
         description: form.value.description,
-        photos: form.value.photos
+        photos: photosArray
     }
 
     let product_id = form.value.id
@@ -102,7 +143,6 @@ const handleSave = async () => {
         Swal.fire('Error', error.message, 'error')
     } else {
         product_id = data.id
-        // Actualizar relación de categorías 
         await supabase.from('product_categories').delete().eq('product_id', product_id)
         if (form.value.category_ids.length > 0) {
             const rels = form.value.category_ids.map(id => ({ product_id, category_id: id }))
@@ -154,6 +194,7 @@ const deleteProduct = async (id) => {
     const result = await Swal.fire({
         title: '¿Eliminar producto?',
         icon: 'warning',
+        cancelButtonText: 'Cancelar',
         showCancelButton: true,
         confirmButtonText: 'Sí, borrar'
     })
@@ -179,11 +220,14 @@ onMounted(async () => {
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-box-seam me-2"></i>Gestión de Productos</h2>
             <div class="d-flex gap-2">
+                <NuxtLink to="/" class="btn btn btn-outline-secondary btn-smtext-decoration-none">
+                    <i class="bi bi-house-door me-1"></i> Volver al Dashboard
+                </NuxtLink>
                 <button @click="exportXLS" class="btn btn-outline-success">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    <i class="bi bi-file-earmark-excel me-1"></i> Exportar
                 </button>
                 <button @click="openModal()" class="btn btn-primary">
-                    <i class="bi bi-plus-lg"></i> Nuevo
+                    <i class="bi bi-plus-lg"></i> Nuevo Producto
                 </button>
             </div>
         </div>
@@ -197,6 +241,7 @@ onMounted(async () => {
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
+                            <th>Foto</th>
                             <th>Código</th>
                             <th>Producto</th>
                             <th>Categorías</th>
@@ -205,6 +250,10 @@ onMounted(async () => {
                     </thead>
                     <tbody>
                         <tr v-for="p in products" :key="p.id">
+                            <td>
+                                <img :src="p.photos?.[0] || ''" class="rounded object-fit-cover shadow-sm"
+                                    style="width: 50px; height: 50px;">
+                            </td>
                             <td><span class="badge bg-secondary">{{ p.code }}</span></td>
                             <td class="fw-bold">{{ p.name }}</td>
                             <td>
@@ -217,7 +266,7 @@ onMounted(async () => {
                                 <div class="btn-group">
                                     <NuxtLink :to="`/products/${p.id}`" class="btn btn-sm btn-outline-dark"
                                         title="Ver Ficha y Tarifas">
-                                        <i class="bi bi-calendar-range"></i>
+                                        <i class="bi bi-eye"></i> Tarifas
                                     </NuxtLink>
                                     <button @click="openModal(p)" class="btn btn-sm btn-outline-primary"><i
                                             class="bi bi-pencil"></i></button>
@@ -228,7 +277,7 @@ onMounted(async () => {
                         </tr>
                         <tr v-if="products.length === 0">
                             <td colspan="5" class="text-center py-5 text-muted">
-                                No hay categorías creadas todavía.
+                                No hay productos creados todavía.
                             </td>
                         </tr>
                     </tbody>
@@ -236,13 +285,7 @@ onMounted(async () => {
             </div>
         </div>
 
-        <div class="mt-3">
-            <NuxtLink to="/" class="btn btn-link btn-sm text-muted text-decoration-none">
-                <i class="bi bi-house-door me-1"></i> Volver al Dashboard
-            </NuxtLink>
-        </div>
-
-        <div class="modal fade" id="productModal" tabindex="-1">
+        <!-- <div class="modal fade" id="productModal" tabindex="-1">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content shadow border-0">
                     <form @submit.prevent="handleSave">
@@ -288,6 +331,93 @@ onMounted(async () => {
                         <div class="modal-footer bg-light">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                             <button type="submit" class="btn btn-primary px-4" :disabled="isSubmitting">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div> -->
+        <div class="modal fade" id="productModal" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content shadow border-0">
+                    <form @submit.prevent="handleSave">
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title fw-bold">{{ isEditing ? 'Editar Producto' : 'Nuevo Producto' }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row g-4">
+                                <div class="col-md-7">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">Código *</label>
+                                            <input v-model="form.code" type="text" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label class="form-label small fw-bold">Nombre *</label>
+                                            <input v-model="form.name" type="text" class="form-control" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Categorías</label>
+                                            <div class="border rounded p-3 bg-white"
+                                                style="max-height: 120px; overflow-y: auto;">
+                                                <div v-for="c in categories" :key="c.id" class="form-check">
+                                                    <input class="form-check-input" type="checkbox" :id="'cat-' + c.id"
+                                                        :value="c.id" v-model="form.category_ids">
+                                                    <label class="form-check-label small" :for="'cat-' + c.id">
+                                                        {{ c.name }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Descripción</label>
+                                            <textarea v-model="form.description" class="form-control"
+                                                rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-5 border-start bg-light rounded-end py-2">
+                                    <label class="form-label small fw-bold text-primary px-2">IMÁGENES DEL
+                                        PRODUCTO</label>
+
+                                    <div class="p-2 mb-3">
+                                        <label class="form-label x-small text-muted mb-1">Cargar desde
+                                            ordenador:</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="file" @change="uploadImage" class="form-control"
+                                                accept="image/*" :disabled="uploadingImg">
+                                            <span v-if="uploadingImg" class="input-group-text bg-white">
+                                                <div class="spinner-border spinner-border-sm text-primary"></div>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center mb-3">
+                                        <hr class="my-0">
+                                        <span class="badge bg-white text-muted small"
+                                            style="position: relative; top: -10px;">o pegar enlaces</span>
+                                    </div>
+
+                                    <div class="p-2 pt-0">
+                                        <label class="form-label x-small text-muted mb-1">Lista de URLs (separadas por
+                                            comas):</label>
+                                        <textarea v-model="form.photos" class="form-control form-control-sm" rows="6"
+                                            placeholder="https://ejemplo.com/foto1.jpg, ..."></textarea>
+                                        <div class="form-text x-small mt-2">
+                                            <i class="bi bi-info-circle me-1"></i> La primera URL será la foto
+                                            principal.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary px-4" :disabled="isSubmitting">
+                                <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+                                {{ isEditing ? 'Actualizar' : 'Guardar' }}
+                            </button>
                         </div>
                     </form>
                 </div>

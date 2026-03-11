@@ -44,7 +44,7 @@ CREATE TABLE
         code character varying NOT NULL UNIQUE,
         name character varying NOT NULL,
         description text,
-        photos ARRAY,
+        photos text[],
         created_at timestamp
         with
             time zone DEFAULT now (),
