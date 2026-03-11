@@ -231,8 +231,8 @@ onMounted(async () => {
                                 <label class="form-label small fw-bold">Categoría Padre</label>
                                 <select v-model="form.parent_id" class="form-select">
                                     <option :value="null">Ninguna (Principal)</option>
-                                    <option v-for="c in categories.filter(c => c.id !== form.id)" :key="c.id"
-                                        :value="c.id">
+                                    <option v-for="c in categories.filter(c => c.id !== form.id && !c.parent_id)"
+                                        :key="c.id" :value="c.id">
                                         {{ c.name }}
                                     </option>
                                 </select>

@@ -245,6 +245,7 @@ onMounted(async () => {
                             <th>Código</th>
                             <th>Producto</th>
                             <th>Categorías</th>
+                            <th>Descripción</th>
                             <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
@@ -262,6 +263,7 @@ onMounted(async () => {
                                     {{ pc.categories?.name }}
                                 </span>
                             </td>
+                            <td>{{ p.description }}</td>
                             <td class="text-end">
                                 <div class="btn-group">
                                     <NuxtLink :to="`/products/${p.id}`" class="btn btn-sm btn-outline-dark"

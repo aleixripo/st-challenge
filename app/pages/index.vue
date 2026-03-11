@@ -19,7 +19,7 @@ const logout = async () => {
 <template>
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center border-bottom pb-3">
-            <h1 class="h2">Backoffice</h1>
+            <h1 class="h2">Dashboard</h1>
             <div>
                 <span class="me-3 text-muted small d-none d-md-inline">{{ user?.email }}</span>
                 <button @click="logout" class="btn btn-outline-danger btn-sm">Cerrar Sesión</button>
