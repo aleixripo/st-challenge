@@ -27,7 +27,7 @@ const logout = async () => {
         </div>
 
         <div class="mt-4">
-            <p class="lead">Bienvenido al gestor de contenidos. Selecciona una sección para comenzar:</p>
+            <p class="lead">Bienvenido al gestor de contenidos. Selecciona una sección para empezar:</p>
 
             <div class="row g-4 mt-2">
                 <div class="col-md-4">
