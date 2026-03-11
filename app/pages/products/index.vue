@@ -196,6 +196,7 @@ const deleteProduct = async (id) => {
         icon: 'warning',
         cancelButtonText: 'Cancelar',
         showCancelButton: true,
+        confirmButtonColor: '#dc3545',
         confirmButtonText: 'Sí, borrar'
     })
     if (result.isConfirmed) {

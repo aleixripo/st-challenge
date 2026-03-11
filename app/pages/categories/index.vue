@@ -113,16 +113,27 @@ const handleSubmit = async () => {
 }
 
 /**
- * Elimina una categoría con su respectiva subcategoría.
- * Se mostrara un mensaje de confirmación con `Swal` antes de eliminar.
+ * Elimina una categoría si no tiene subcategorías.
+ * Antes de eliminar, se muestra un mensaje de confirmación con `Swal`.
  * Si se produce un error, no se hará nada.
  * Si se completa con éxito, se recarga la tabla de categorías con `fetchCategories`.
- * @param {number} id - Identificador de la categoría a eliminar.
+ * @param {Object} category - La categoría a eliminar.
  */
-const deleteCategory = async (id) => {
+const deleteCategory = async (category) => {
+    const hasChildren = categories.value.some(c => c.parent_id === category.id)
+
+    if (hasChildren) {
+        await Swal.fire({
+            title: 'No se puede eliminar',
+            text: `La categoría "${category.name}" contiene subcategorías. Debes eliminarlas o moverlas primero.`,
+            icon: 'error'
+        })
+        return
+    }
+
     const result = await Swal.fire({
         title: '¿Estás seguro?',
-        text: "Se borrarán también sus subcategorías.",
+        text: `Vas a eliminar la categoría "${category.name}".`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -130,8 +141,8 @@ const deleteCategory = async (id) => {
     })
 
     if (result.isConfirmed) {
-        const { error } = await supabase.from('categories').delete().eq('id', id)
-        if (!error) fetchCategories()
+        await supabase.from('categories').delete().eq('id', category.id)
+        fetchCategories()
     }
 }
 
@@ -190,7 +201,7 @@ onMounted(async () => {
                                     <button @click="openModal(cat)" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button @click="deleteCategory(cat.id)" class="btn btn-sm btn-outline-danger">
+                                    <button @click="deleteCategory(cat)" class="btn btn-sm btn-outline-danger">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
